@@ -7,6 +7,13 @@ ticker, report_date, period_ending, estimated, reported, surprise, surprise%
 #pragma once
 
 #include <string>
+#include <vector>
+
+struct MemoryStruct
+{
+    char* memory;
+    size_t size;
+};
 
 class Stock
 {
@@ -19,6 +26,8 @@ private:
     double surprise;
     double surprise_pct;
     std::string group; // Store the group that the stock belongs to.
+
+    std::vector<double> AdjClose; // Store the historical price data.
 
 public:
     Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0) {}
@@ -38,4 +47,5 @@ public:
 
     // Setter function
     void SetGroup(std::string g) { group = g; }
+    void PassData(vector<double> &source) { AdjClose = source; }
 };
