@@ -83,7 +83,7 @@ double calculatePercentile(vector<double>& data, double percentile) {
     }
 
     size_t n = data.size();
-    size_t index = static_cast<size_t>(percentile / 100.0 * n);
+    size_t index = static_cast<size_t>(percentile / 100.0 * (n - 1));
 
     // Partially sort the vector to find the nth element
     nth_element(data.begin(), data.begin() + index, data.end());

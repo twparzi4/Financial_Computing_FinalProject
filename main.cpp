@@ -24,9 +24,9 @@ int main()
     // PrintStockInfo(TotalStock);
 
     // Test groups are around same size
-    // cout << "Best size: " << BestEsti.size() << endl
-    //      << "Miss size: " << MissEsti.size() << endl
-    //      << "Meet size: " << MeetEsti.size() << endl;
+    cout << "Best size: " << BestEsti.size() << endl
+         << "Miss size: " << MissEsti.size() << endl
+         << "Meet size: " << MeetEsti.size() << endl;
 
     return 0;
 }
