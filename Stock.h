@@ -18,7 +18,7 @@ private:
     double reported;
     double surprise;
     double surprise_pct;
-    char group; // Store the group that the stock belongs to.
+    std::string group; // Store the group that the stock belongs to.
 
 public:
     Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0) {}
@@ -33,9 +33,9 @@ public:
     double GetEsti() { return estimated; }
     double GetReported() { return reported; }
     double GetSurprise() { return surprise; }
-    double GetSurpricePct() { return surprise_pct; }
-    char GetGroup() { return group; }
+    double GetSurprisePct() { return surprise_pct; }
+    std::string GetGroup() { return group; }
 
     // Setter function
-    void SetGroup(char g) { group = g; }
+    void SetGroup(std::string g) { group = g; }
 };
