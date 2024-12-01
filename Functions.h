@@ -22,11 +22,13 @@ void ExtractEarningsInfo(StocksGroup &TotalStocks, vector<double> &surprises)
     {
         cout << "Start to Read in Earning Informations." << endl;
     }
+
     while (!fin.eof())
     {
         getline(fin, line);
         stringstream sin(line);
         getline(sin, ticker, ',');
+        // cout<<ticker<<endl;///
         getline(sin, date, ',');
         getline(sin, period_ending, ',');
         getline(sin, estimate, ',');
@@ -68,7 +70,11 @@ void PrintStockInfo(StocksGroup &S)
                  << "Estimated Earnings: " << stk.GetEsti() << endl
                  << "Reported Earnings: " << stk.GetReported() << endl
                  << "Surprise: " << stk.GetSurprise() << endl
-                 << "Surprise%: " << stk.GetSurprisePct() << endl;
+                 << "Surprise%: " << stk.GetSurprisePct() << endl << endl 
+                 << "Data Status" << stk.GetStatus() << endl
+                 << "Historical Price Information: " << endl;
+            
+            it->second.PrintHistoricalData();
         }
         else
         {

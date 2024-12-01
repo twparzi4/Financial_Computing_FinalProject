@@ -7,7 +7,20 @@ ticker, report_date, period_ending, estimated, reported, surprise, surprise%
 #pragma once
 
 #include <string>
+#include <sstream>
 #include <vector>
+#include <iostream>
+
+
+using namespace std;
+
+struct Row
+{
+    std::string date;
+    double open, high, low, close, adj_close, volume;
+};
+
+typedef std::vector<struct Row> DataFrame;
 
 struct MemoryStruct
 {
@@ -27,8 +40,9 @@ private:
     double surprise_pct;
     std::string group; // Store the group that the stock belongs to.
 
-    std::vector<double> AdjClose; // Store the historical price data.
-
+    std::stringstream sData; // Store raw historical price data for the stock.
+    DataFrame df; // Store clipped historical data
+    int data_status; // -1: data lack before day0; 1: data lack after day0; 0: no problem; -2: data lack efore and after day0
 public:
     Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0) {}
     // Initialize with params
@@ -44,8 +58,20 @@ public:
     double GetSurprise() { return surprise; }
     double GetSurprisePct() { return surprise_pct; }
     std::string GetGroup() { return group; }
+    int GetStatus() { return data_status; }
+
+
+    void PrintHistoricalData();
+    void Clipping(int N);  // count how many effective rows of historical data is in sData
 
     // Setter function
     void SetGroup(std::string g) { group = g; }
-    void PassData(vector<double> &source) { AdjClose = source; }
+    void PassData(struct MemoryStruct &source) { sData.str(source.memory); }
+
+    // overload assignment operator
+    Stock& operator=(const Stock &source);
+
+    // overload copy constructor
+    Stock(const Stock &source);
 };
+

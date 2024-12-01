@@ -1,4 +1,62 @@
 #include "Retriever.h"
+void* myrealloc(void* ptr, size_t size)
+{
+	if (ptr)
+		return realloc(ptr, size);
+	else
+		return malloc(size);
+}
+int write_data(void* ptr, size_t size, size_t nmemb, void* data)
+{
+	size_t realsize = size * nmemb;
+	struct MemoryStruct* mem = (struct MemoryStruct*)data;
+	mem->memory = (char*)myrealloc(mem->memory, mem->size + realsize + 1);
+	if (mem->memory) {
+		memcpy(&(mem->memory[mem->size]), ptr, realsize);
+		mem->size += realsize;
+		mem->memory[mem->size] = 0;
+	}
+	return realsize;
+}
+
+vector<string> GetDateRange(string DayZero, int N)
+{
+	/*
+	Calculates the date range for a given center date and number of tradingdays required. 
+	Strategy here is to generate a date range of 1.5N days before and after day zero, to ensure that enough data is obtained.
+	*/
+
+    int days_offset = static_cast<int> (1.5 * N);
+
+    // Parse date string into a tm structure
+    tm tm = {};
+    istringstream ss(DayZero);
+    ss >> get_time(&tm, "%Y-%m-%d");
+
+    // convert tm to time_point
+    time_t time = mktime(&tm);
+    auto tp = chrono::system_clock::from_time_t(time);
+
+    // calculate date range in time_point type
+    auto lb = tp - chrono::hours(24 * days_offset);
+    auto ub = tp + chrono::hours(24 * days_offset);
+
+    // convert date boundaries back to string
+    time_t lb_t = chrono::system_clock::to_time_t(lb);
+    time_t ub_t = chrono::system_clock::to_time_t(ub);
+    ostringstream lb_os;
+    ostringstream ub_os;
+
+    lb_os << put_time(localtime(&lb_t), "%Y-%m-%d");
+    ub_os << put_time(localtime(&ub_t), "%Y-%m-%d");
+
+    vector<string> vec;
+    vec.push_back(lb_os.str());
+    vec.push_back(ub_os.str());
+
+    return vec;
+}
+
 
 int Retriever::GetData(StocksGroup &stocks, int N)
 {
@@ -7,6 +65,8 @@ int Retriever::GetData(StocksGroup &stocks, int N)
         cout << "N is invalid." << endl;
         return -1;
     }
+    
+    vector<string> boundaries;
 
     // declare a pointer of CURL
     CURL* handle;
@@ -29,7 +89,12 @@ int Retriever::GetData(StocksGroup &stocks, int N)
 
             string symbol = it->first;
 
-            string url_request = url_common + symbol + ".US?" + "from=" + start_date + "&to=" + end_date + "&api_token=" + api_token + "&period=d";
+            boundaries = GetDateRange(it->second.GetDayZero(), N);
+
+            // cout<<symbol<<endl;
+            // cout << boundaries[0] <<endl<<boundaries[1]<<endl<<it->second.GetDayZero()<<endl;
+
+            string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] + "&api_token=" + api_token + "&period=d";
             curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
 
             //adding a user agent
@@ -48,7 +113,31 @@ int Retriever::GetData(StocksGroup &stocks, int N)
                 cout << "curl_easy_perform() failed: " << curl_easy_strerror(status) << endl;
                 return -1;
             }
+            
+            // Pass historical price into stock
+            it->second.PassData(data);
+
+            // Warn if there's not enough data
+            // Clip redundate dates of data
+            it->second.Clipping(N);
+
+            // clear memory
+            free(data.memory);
+            data.size = 0;
         }
         
     }
+    else
+	{
+		cout << "Curl init failed!" << endl;
+		return -1;
+	}
+
+	// cleanup what is created by curl_easy_init
+	curl_easy_cleanup(handle);
+
+	// release resources acquired by curl_global_init()
+	curl_global_cleanup();
+
+	return 0;
 }

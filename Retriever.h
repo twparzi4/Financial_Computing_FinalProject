@@ -8,6 +8,9 @@
 #include <sstream>
 #include <locale>
 #include <fstream>
+#include <ctime>
+#include <chrono>
+#include <iomanip>
 
 using namespace std;
 
@@ -25,24 +28,7 @@ public:
     int GetData(StocksGroup &stocks, int N);
 };
 
+void* myrealloc(void* ptr, size_t size);
+int write_data(void* ptr, size_t size, size_t nmemb, void* data);
 
-int write_data(void* ptr, size_t size, size_t nmemb, void* data)
-{
-	size_t realsize = size * nmemb;
-	struct MemoryStruct* mem = (struct MemoryStruct*)data;
-	mem->memory = (char*)myrealloc(mem->memory, mem->size + realsize + 1);
-	if (mem->memory) {
-		memcpy(&(mem->memory[mem->size]), ptr, realsize);
-		mem->size += realsize;
-		mem->memory[mem->size] = 0;
-	}
-	return realsize;
-}
-
-void* myrealloc(void* ptr, size_t size)
-{
-	if (ptr)
-		return realloc(ptr, size);
-	else
-		return malloc(size);
-}
+vector<string> GetDateRange(string DayZero, int N);
