@@ -141,3 +141,78 @@ int Retriever::GetData(StocksGroup &stocks, int N)
 
 	return 0;
 }
+
+
+
+// Mutex for thread-safe access to the StocksGroup
+// mutex stocksMutex;
+
+// void Retriever::GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N) {
+//     CURL* handle;
+//     CURLcode status;
+//     curl_global_init(CURL_GLOBAL_ALL);
+//     handle = curl_easy_init();
+
+//     if (handle) {
+//         for (auto it = start; it != end; ++it) {
+//             struct MemoryStruct data;
+//             data.memory = NULL;
+//             data.size = 0;
+
+//             string symbol = it->first;
+//             vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
+//             string url_request = url_common + symbol + ".US?from=" + boundaries[0] + "&to=" + boundaries[1] +
+//                                  "&api_token=" + api_token + "&period=d";
+
+//             curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
+//             curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
+//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+//             curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
+//             curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&data);
+
+//             status = curl_easy_perform(handle);
+//             if (status == CURLE_OK) {
+//                 std::lock_guard<std::mutex> lock(stocksMutex);
+//                 it->second.PassData(data);
+//                 it->second.Clipping(N);
+//             } else {
+//                 std::cerr << "Failed to retrieve data for " << symbol << std::endl;
+//             }
+
+//             free(data.memory);
+//         }
+//     }
+
+//     curl_easy_cleanup(handle);
+//     curl_global_cleanup();
+// }
+
+// int Retriever::GetData(StocksGroup &stocks, int N) {
+//     if (N < 40 || N > 80) {
+//         std::cerr << "N is invalid." << std::endl;
+//         return -1;
+//     }
+
+//     // Determine the number of hardware threads available for concurrent execution.
+//     const size_t numThreads = std::thread::hardware_concurrency();
+//     cout << numThreads << endl;  // it cannot go multithreading... number of threads is 1
+
+//     // Calculate the size of the workload each thread will handle
+//     size_t chunkSize = stocks.size() / numThreads;
+
+//     std::vector<std::thread> threads;
+
+//     auto it = stocks.begin();
+//     for (size_t i = 0; i < numThreads; ++i) {
+//         auto start = it;
+//         std::advance(it, (i == numThreads - 1) ? stocks.size() - i * chunkSize : chunkSize);
+//         threads.emplace_back(&Retriever::GetDataForStocksRange, this, start, it, N);
+//     }
+
+//     for (auto &t : threads) {
+//         if (t.joinable()) t.join();
+//     }
+
+//     return 0;
+// }

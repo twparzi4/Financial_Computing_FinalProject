@@ -14,7 +14,7 @@ Stock& Stock::operator=(const Stock &source)
     surprise = source.surprise;
     surprise_pct = source.surprise_pct;
     group = source.group;
-    data_status = data_status;
+    data_status = source.data_status;
 
     sData.str(source.sData.str());
 
@@ -33,7 +33,7 @@ Stock::Stock(const Stock &source)
     surprise = source.surprise;
     surprise_pct = source.surprise_pct;
     group = source.group;
-    data_status = data_status;
+    data_status = source.data_status;
 
     sData.str(source.sData.str());
 
@@ -84,6 +84,9 @@ void Stock::Clipping(int N)
     }
     // check if there is enough data both before and after day zero
 
+    // cout << ticker << " data status before checking: " << data_status << endl;
+
+
     if (count_before < N)
     {
         cout << "Not enough data before day 0 for stock " << ticker << endl;
@@ -109,7 +112,8 @@ void Stock::Clipping(int N)
         return;
     }
 
-    data_status = 0;    
+    // cout << "data status after checking: " << data_status << endl;
+    // data_status = 0;    
 
     // clipping df
     for (int i = 0; i < count_before - N; i++) { df.erase(df.begin()); }

@@ -45,6 +45,9 @@ void ExtractEarningsInfo(StocksGroup &TotalStocks, vector<double> &surprises)
 
 void PrintStockInfo(StocksGroup &S)
 {
+    /*
+    Print info of the stock that user inputs
+    */
     string inputKey;
 
     while (true)
@@ -71,7 +74,7 @@ void PrintStockInfo(StocksGroup &S)
                  << "Reported Earnings: " << stk.GetReported() << endl
                  << "Surprise: " << stk.GetSurprise() << endl
                  << "Surprise%: " << stk.GetSurprisePct() << endl << endl 
-                 << "Data Status" << stk.GetStatus() << endl
+                 << "Data Status: " << stk.GetStatus() << endl
                  << "Historical Price Information: " << endl;
             
             it->second.PrintHistoricalData();

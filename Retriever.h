@@ -14,6 +14,7 @@
 
 using namespace std;
 
+
 class Retriever
 {
 private:
@@ -25,10 +26,12 @@ public:
     Retriever() : url_common("https://eodhistoricaldata.com/api/eod/"), api_token("6743c583842130.88976468") {}
     Retriever(string url_, string api_) : url_common(url_), api_token(api_) {}
 
-    int GetData(StocksGroup &stocks, int N);
+    void GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N);
+
+    int GetData(StocksGroup &stocks, int N);  // Retrieve data and store it in stocks
 };
 
 void* myrealloc(void* ptr, size_t size);
 int write_data(void* ptr, size_t size, size_t nmemb, void* data);
 
-vector<string> GetDateRange(string DayZero, int N);
+vector<string> GetDateRange(string DayZero, int N);  // Get the natural date range satisfying 2N+1 working days 

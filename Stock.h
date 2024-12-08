@@ -44,10 +44,10 @@ private:
     DataFrame df; // Store clipped historical data
     int data_status; // -1: data lack before day0; 1: data lack after day0; 0: no problem; -2: data lack efore and after day0
 public:
-    Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0) {}
+    Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0), data_status(0) {}
     // Initialize with params
     Stock(std::string tic, std::string date, std::string end_date, double esti, double reported_, double surp, double surp_pct) : \
-            ticker(tic), report_date(date), period_ending(end_date), estimated(esti), reported(reported_), surprise(surp), surprise_pct(surp_pct) {}
+            ticker(tic), report_date(date), period_ending(end_date), estimated(esti), reported(reported_), surprise(surp), surprise_pct(surp_pct), data_status(0) {}
     
     // Getter functions
     std::string GetTicker() { return ticker; }

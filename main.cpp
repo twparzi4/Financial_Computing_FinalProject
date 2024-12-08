@@ -36,7 +36,7 @@ int main()
 
 
     // Group the stocks based on their earnings surprises
-    // StocksGrouping(BestEsti, MeetEsti, MissEsti, TotalStock, surprises);
+    StocksGrouping(BestEsti, MeetEsti, MissEsti, TotalStock, surprises);
 
     // Test pulling earning information
     PrintStockInfo(TotalStock);
