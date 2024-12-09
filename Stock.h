@@ -10,6 +10,7 @@ ticker, report_date, period_ending, estimated, reported, surprise, surprise%
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <mutex>
 
 
 using namespace std;
@@ -43,6 +44,8 @@ private:
     std::stringstream sData; // Store raw historical price data for the stock.
     DataFrame df; // Store clipped historical data
     int data_status; // -1: data lack before day0; 1: data lack after day0; 0: no problem; -2: data lack efore and after day0
+
+    mutex stockMutex; // Ensure thread safety
 public:
     Stock() : ticker(""), report_date(""), period_ending(""), estimated(0.0), reported(0.0), surprise(0.0), surprise_pct(0.0), data_status(0) {}
     // Initialize with params
@@ -66,7 +69,7 @@ public:
 
     // Setter function
     void SetGroup(std::string g) { group = g; }
-    void PassData(struct MemoryStruct &source) { sData.str(source.memory); }
+    void PassData(struct MemoryStruct &source) { lock_guard<mutex> lock(stockMutex); sData.str(source.memory); }
 
     // overload assignment operator
     Stock& operator=(const Stock &source);

@@ -23,10 +23,10 @@ vector<string> GetDateRange(string DayZero, int N)
 {
 	/*
 	Calculates the date range for a given center date and number of tradingdays required. 
-	Strategy here is to generate a date range of 1.5N days before and after day zero, to ensure that enough data is obtained.
+	Strategy here is to generate a date range of 2N days before and after day zero, to ensure that enough data is obtained.
 	*/
 
-    int days_offset = static_cast<int> (1.5 * N);
+    int days_offset = static_cast<int> (2 * N);  // Modified 12-09: 1.5 * N seems to be not enough for N <46
 
     // Parse date string into a tm structure
     tm tm = {};
@@ -142,62 +142,179 @@ vector<string> GetDateRange(string DayZero, int N)
 // 	return 0;
 // }
 
-// Alex:改了一点
-int Retriever::GetData(StocksGroup& stocks, int N, Stock& iwv) {
-    if (N < 40 || N > 80) {
-        cout << "N is invalid." << endl;
-        return -1;
-    }
+// // Alex:改了一点
+// int Retriever::GetData(StocksGroup& stocks, int N, Stock& iwv) {
+//     if (N < 40 || N > 80) {
+//         cout << "N is invalid." << endl;
+//         return -1;
+//     }
 
+//     CURL* handle;
+//     CURLcode status;
+//     curl_global_init(CURL_GLOBAL_ALL);
+//     handle = curl_easy_init();
+
+//     if (!handle) {
+//         cerr << "Curl init failed!" << endl;
+//         return -1;
+//     }
+
+//     // Retrieve data for each stock in the group
+//     for (auto it = stocks.begin(); it != stocks.end(); ++it) {
+//         struct MemoryStruct data = {nullptr, 0};
+
+//         string symbol = it->first;
+//         vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
+
+//         string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] +
+//                              "&api_token=" + api_token + "&period=d";
+//         curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
+//         curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0");
+//         curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+//         curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+//         curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
+//         curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&data);
+
+//         status = curl_easy_perform(handle);
+//         if (status != CURLE_OK) {
+//             cerr << "curl_easy_perform() failed for " << symbol << ": " << curl_easy_strerror(status) << endl;
+//             free(data.memory);
+//             continue;
+//         }
+
+//         // Pass historical price data to the stock
+//         it->second.PassData(data);
+//         it->second.Clipping(N);
+
+//         free(data.memory);
+//     }
+
+//     // Retrieve data for IWV
+//     struct MemoryStruct iwv_data = {nullptr, 0};
+
+//     vector<string> iwv_boundaries = GetDateRange("2024-07-01", N); // Replace "2024-07-01" with actual date if needed
+//     string iwv_url = url_common + "IWV.US?" + "from=" + iwv_boundaries[0] + "&to=" + iwv_boundaries[1] +
+//                      "&api_token=" + api_token + "&period=d";
+//     curl_easy_setopt(handle, CURLOPT_URL, iwv_url.c_str());
+//     curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&iwv_data);
+
+//     status = curl_easy_perform(handle);
+//     if (status != CURLE_OK) {
+//         cerr << "curl_easy_perform() failed for IWV: " << curl_easy_strerror(status) << endl;
+//         free(iwv_data.memory);
+//         curl_easy_cleanup(handle);
+//         curl_global_cleanup();
+//         return -1; // Indicate failure to retrieve IWV data
+//     }
+
+//     // Pass IWV data to the IWV Stock object
+//     iwv.PassData(iwv_data);
+//     iwv.Clipping(N);
+//     cout << "Successfully retrieved IWV data." << endl;
+
+//     free(iwv_data.memory);
+
+//     curl_easy_cleanup(handle);
+//     curl_global_cleanup();
+
+//     return 0; // Success
+// }
+
+
+
+// Mutex for thread-safe access to the StocksGroup
+mutex stocksMutex;
+
+void Retriever::GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N) {
     CURL* handle;
     CURLcode status;
     curl_global_init(CURL_GLOBAL_ALL);
     handle = curl_easy_init();
 
-    if (!handle) {
-        cerr << "Curl init failed!" << endl;
+    if (handle) {
+        for (auto it = start; it != end; ++it) {
+            struct MemoryStruct data;
+            data.memory = NULL;
+            data.size = 0;
+
+            string symbol = it->first;
+            vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
+            // cout << "Getting data for stock " << symbol << endl;
+            string url_request = url_common + symbol + ".US?from=" + boundaries[0] + "&to=" + boundaries[1] +
+                                 "&api_token=" + api_token + "&period=d";
+
+            curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
+            curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
+            curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
+            curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&data);
+
+            status = curl_easy_perform(handle);
+            if (status == CURLE_OK) {
+                lock_guard<mutex> lock(stocksMutex);
+                it->second.PassData(data);
+                it->second.Clipping(N);
+            } else {
+                std::cerr << "Failed to retrieve data for " << symbol << std::endl;
+            }
+
+            free(data.memory);
+        }
+    }
+
+    curl_easy_cleanup(handle);
+    curl_global_cleanup();
+}
+
+// Modified code to suit benchmark need
+int Retriever::GetData(StocksGroup &stocks, int N, Stock& iwv) {
+    if (N < 40 || N > 80) {
+        std::cerr << "N is invalid." << std::endl;
         return -1;
     }
 
-    // Retrieve data for each stock in the group
-    for (auto it = stocks.begin(); it != stocks.end(); ++it) {
-        struct MemoryStruct data = {nullptr, 0};
+    // Determine the number of hardware threads available for concurrent execution.
+    // const size_t numThreads = std::thread::hardware_concurrency();
+    // cout << numThreads << endl;  // it cannot go multithreading... number of threads is 1
 
-        string symbol = it->first;
-        vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
+    // Calculate the size of the workload each thread will handle
+    // size_t chunkSize = stocks.size() / numThreads;
+    const size_t numThreads = 3; // changed from 4 to 3 and no issues for extarcting stock price.. so it's the api's problem
+    size_t chunkSize = stocks.size() / numThreads;
 
-        string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] +
-                             "&api_token=" + api_token + "&period=d";
-        curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
-        curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0");
-        curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&data);
+    vector<thread> threads;
 
-        status = curl_easy_perform(handle);
-        if (status != CURLE_OK) {
-            cerr << "curl_easy_perform() failed for " << symbol << ": " << curl_easy_strerror(status) << endl;
-            free(data.memory);
-            continue;
-        }
-
-        // Pass historical price data to the stock
-        it->second.PassData(data);
-        it->second.Clipping(N);
-
-        free(data.memory);
+    auto it = stocks.begin();
+    for (size_t i = 0; i < numThreads; ++i) {
+        auto start = it;
+        advance(it, (i == numThreads - 1) ? stocks.size() - i * chunkSize : chunkSize);
+        threads.emplace_back(&Retriever::GetDataForStocksRange, this, start, it, N);
     }
 
-    // Retrieve data for IWV
-    struct MemoryStruct iwv_data = {nullptr, 0};
+    for (auto &t : threads) {
+        if (t.joinable()) t.join();
+        // cout << "thread" << endl;
+    }
 
+    cout << "Start extracting data for benchmark" << endl;
+    // Retrieve data for IWV
+    CURL* handle;
+    CURLcode status;
+    curl_global_init(CURL_GLOBAL_ALL);
+    handle = curl_easy_init();
+
+    struct MemoryStruct iwv_data = {nullptr, 0};
     vector<string> iwv_boundaries = GetDateRange("2024-07-01", N); // Replace "2024-07-01" with actual date if needed
     string iwv_url = url_common + "IWV.US?" + "from=" + iwv_boundaries[0] + "&to=" + iwv_boundaries[1] +
                      "&api_token=" + api_token + "&period=d";
     curl_easy_setopt(handle, CURLOPT_URL, iwv_url.c_str());
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
+    curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&iwv_data);
-
+    
     status = curl_easy_perform(handle);
     if (status != CURLE_OK) {
         cerr << "curl_easy_perform() failed for IWV: " << curl_easy_strerror(status) << endl;
@@ -206,7 +323,7 @@ int Retriever::GetData(StocksGroup& stocks, int N, Stock& iwv) {
         curl_global_cleanup();
         return -1; // Indicate failure to retrieve IWV data
     }
-
+ 
     // Pass IWV data to the IWV Stock object
     iwv.PassData(iwv_data);
     iwv.Clipping(N);
@@ -217,80 +334,5 @@ int Retriever::GetData(StocksGroup& stocks, int N, Stock& iwv) {
     curl_easy_cleanup(handle);
     curl_global_cleanup();
 
-    return 0; // Success
+    return 0;
 }
-
-
-
-// Mutex for thread-safe access to the StocksGroup
-// mutex stocksMutex;
-
-// void Retriever::GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N) {
-//     CURL* handle;
-//     CURLcode status;
-//     curl_global_init(CURL_GLOBAL_ALL);
-//     handle = curl_easy_init();
-
-//     if (handle) {
-//         for (auto it = start; it != end; ++it) {
-//             struct MemoryStruct data;
-//             data.memory = NULL;
-//             data.size = 0;
-
-//             string symbol = it->first;
-//             vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
-//             string url_request = url_common + symbol + ".US?from=" + boundaries[0] + "&to=" + boundaries[1] +
-//                                  "&api_token=" + api_token + "&period=d";
-
-//             curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
-//             curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
-//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
-//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
-//             curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
-//             curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&data);
-
-//             status = curl_easy_perform(handle);
-//             if (status == CURLE_OK) {
-//                 std::lock_guard<std::mutex> lock(stocksMutex);
-//                 it->second.PassData(data);
-//                 it->second.Clipping(N);
-//             } else {
-//                 std::cerr << "Failed to retrieve data for " << symbol << std::endl;
-//             }
-
-//             free(data.memory);
-//         }
-//     }
-
-//     curl_easy_cleanup(handle);
-//     curl_global_cleanup();
-// }
-
-// int Retriever::GetData(StocksGroup &stocks, int N) {
-//     if (N < 40 || N > 80) {
-//         std::cerr << "N is invalid." << std::endl;
-//         return -1;
-//     }
-
-//     // Determine the number of hardware threads available for concurrent execution.
-//     const size_t numThreads = std::thread::hardware_concurrency();
-//     cout << numThreads << endl;  // it cannot go multithreading... number of threads is 1
-
-//     // Calculate the size of the workload each thread will handle
-//     size_t chunkSize = stocks.size() / numThreads;
-
-//     std::vector<std::thread> threads;
-
-//     auto it = stocks.begin();
-//     for (size_t i = 0; i < numThreads; ++i) {
-//         auto start = it;
-//         std::advance(it, (i == numThreads - 1) ? stocks.size() - i * chunkSize : chunkSize);
-//         threads.emplace_back(&Retriever::GetDataForStocksRange, this, start, it, N);
-//     }
-
-//     for (auto &t : threads) {
-//         if (t.joinable()) t.join();
-//     }
-
-//     return 0;
-// }

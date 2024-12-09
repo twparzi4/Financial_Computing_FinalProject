@@ -135,6 +135,8 @@ void Stock::PrintHistoricalData()
 
 //改了一下
 void Stock::Clipping(int N) {
+    lock_guard<mutex> lock(stockMutex);
+
     string line, sDate;
     double open, high, low, close, adjclose, volume;
     int count_before = 0, count_after = 0;
@@ -144,6 +146,7 @@ void Stock::Clipping(int N) {
     while (getline(sData, line)) {
         size_t found = line.find('-');
         if (found != string::npos) {
+            // cout << line << endl;
             sDate = line.substr(0, line.find_first_of(','));
             volume = stod(line.substr(line.find_last_of(',') + 1));
             line.erase(line.find_last_of(','));

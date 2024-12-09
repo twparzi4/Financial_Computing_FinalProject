@@ -19,7 +19,7 @@ int main()
     ExtractEarningsInfo(TotalStock, surprises);
     
     Retriever loader;
-    loader.GetData(TotalStock, 50);
+    // loader.GetData(TotalStock, 50);
 
     // auto it = TotalStock.begin();
     // int count = 0;

@@ -11,6 +11,9 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
+#include <thread>
+#include <functional>
+#include <mutex>
 
 using namespace std;
 

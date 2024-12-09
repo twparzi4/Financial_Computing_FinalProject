@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -ggdb3 -std=c++11 -lcurl 
+CFLAGS = -Wall -ggdb3 -std=c++11 -lcurl -pthread
 
 FinalProject: main.o Retriever.o Stock.o
 	$(CC) $(CFLAGS) -o FinalProject main.o Retriever.o Stock.o
