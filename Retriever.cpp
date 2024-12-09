@@ -58,88 +58,166 @@ vector<string> GetDateRange(string DayZero, int N)
 }
 
 
-int Retriever::GetData(StocksGroup &stocks, int N)
-{
-    if (N < 40 || N > 80)
-    {
+// int Retriever::GetData(StocksGroup &stocks, int N)
+// {
+//     if (N < 40 || N > 80)
+//     {
+//         cout << "N is invalid." << endl;
+//         return -1;
+//     }
+    
+//     vector<string> boundaries;
+
+//     // declare a pointer of CURL
+//     CURL* handle;
+//     CURLcode status;
+
+//     // set up the program environment that libcurl needs
+// 	curl_global_init(CURL_GLOBAL_ALL);
+
+// 	// curl_easy_init() returns a CURL easy handle
+// 	handle = curl_easy_init();
+
+//     if (handle)
+//     {
+//         auto it = stocks.begin();
+//         for(; it != stocks.end(); it++)
+//         {
+//             struct MemoryStruct data;
+//             data.memory = NULL;
+//             data.size = 0;
+
+//             string symbol = it->first;
+
+//             boundaries = GetDateRange(it->second.GetDayZero(), N);
+
+//             // cout<<symbol<<endl;
+//             // cout << boundaries[0] <<endl<<boundaries[1]<<endl<<it->second.GetDayZero()<<endl;
+
+//             string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] + "&api_token=" + api_token + "&period=d";
+//             curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
+
+//             //adding a user agent
+//             curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
+//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+//             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+
+//             curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
+//             curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&data);
+
+//             // retrieve data
+//             status = curl_easy_perform(handle);
+
+//             if (status != CURLE_OK)
+//             {
+//                 cout << "curl_easy_perform() failed: " << curl_easy_strerror(status) << endl;
+//                 return -1;
+//             }
+            
+//             // Pass historical price into stock
+//             it->second.PassData(data);
+
+//             // Warn if there's not enough data
+//             // Clip redundate dates of data
+//             it->second.Clipping(N);
+
+//             // clear memory
+//             free(data.memory);
+//             data.size = 0;
+//         }
+        
+//     }
+//     else
+// 	{
+// 		cout << "Curl init failed!" << endl;
+// 		return -1;
+// 	}
+
+// 	// cleanup what is created by curl_easy_init
+// 	curl_easy_cleanup(handle);
+
+// 	// release resources acquired by curl_global_init()
+// 	curl_global_cleanup();
+
+// 	return 0;
+// }
+
+// Alex:改了一点
+int Retriever::GetData(StocksGroup& stocks, int N, Stock& iwv) {
+    if (N < 40 || N > 80) {
         cout << "N is invalid." << endl;
         return -1;
     }
-    
-    vector<string> boundaries;
 
-    // declare a pointer of CURL
     CURL* handle;
     CURLcode status;
+    curl_global_init(CURL_GLOBAL_ALL);
+    handle = curl_easy_init();
 
-    // set up the program environment that libcurl needs
-	curl_global_init(CURL_GLOBAL_ALL);
-
-	// curl_easy_init() returns a CURL easy handle
-	handle = curl_easy_init();
-
-    if (handle)
-    {
-        auto it = stocks.begin();
-        for(; it != stocks.end(); it++)
-        {
-            struct MemoryStruct data;
-            data.memory = NULL;
-            data.size = 0;
-
-            string symbol = it->first;
-
-            boundaries = GetDateRange(it->second.GetDayZero(), N);
-
-            // cout<<symbol<<endl;
-            // cout << boundaries[0] <<endl<<boundaries[1]<<endl<<it->second.GetDayZero()<<endl;
-
-            string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] + "&api_token=" + api_token + "&period=d";
-            curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
-
-            //adding a user agent
-            curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0");
-            curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
-
-            curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
-            curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&data);
-
-            // retrieve data
-            status = curl_easy_perform(handle);
-
-            if (status != CURLE_OK)
-            {
-                cout << "curl_easy_perform() failed: " << curl_easy_strerror(status) << endl;
-                return -1;
-            }
-            
-            // Pass historical price into stock
-            it->second.PassData(data);
-
-            // Warn if there's not enough data
-            // Clip redundate dates of data
-            it->second.Clipping(N);
-
-            // clear memory
-            free(data.memory);
-            data.size = 0;
-        }
-        
+    if (!handle) {
+        cerr << "Curl init failed!" << endl;
+        return -1;
     }
-    else
-	{
-		cout << "Curl init failed!" << endl;
-		return -1;
-	}
 
-	// cleanup what is created by curl_easy_init
-	curl_easy_cleanup(handle);
+    // Retrieve data for each stock in the group
+    for (auto it = stocks.begin(); it != stocks.end(); ++it) {
+        struct MemoryStruct data = {nullptr, 0};
 
-	// release resources acquired by curl_global_init()
-	curl_global_cleanup();
+        string symbol = it->first;
+        vector<string> boundaries = GetDateRange(it->second.GetDayZero(), N);
 
-	return 0;
+        string url_request = url_common + symbol + ".US?" + "from=" + boundaries[0] + "&to=" + boundaries[1] +
+                             "&api_token=" + api_token + "&period=d";
+        curl_easy_setopt(handle, CURLOPT_URL, url_request.c_str());
+        curl_easy_setopt(handle, CURLOPT_USERAGENT, "Mozilla/5.0");
+        curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&data);
+
+        status = curl_easy_perform(handle);
+        if (status != CURLE_OK) {
+            cerr << "curl_easy_perform() failed for " << symbol << ": " << curl_easy_strerror(status) << endl;
+            free(data.memory);
+            continue;
+        }
+
+        // Pass historical price data to the stock
+        it->second.PassData(data);
+        it->second.Clipping(N);
+
+        free(data.memory);
+    }
+
+    // Retrieve data for IWV
+    struct MemoryStruct iwv_data = {nullptr, 0};
+
+    vector<string> iwv_boundaries = GetDateRange("2024-07-01", N); // Replace "2024-07-01" with actual date if needed
+    string iwv_url = url_common + "IWV.US?" + "from=" + iwv_boundaries[0] + "&to=" + iwv_boundaries[1] +
+                     "&api_token=" + api_token + "&period=d";
+    curl_easy_setopt(handle, CURLOPT_URL, iwv_url.c_str());
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*)&iwv_data);
+
+    status = curl_easy_perform(handle);
+    if (status != CURLE_OK) {
+        cerr << "curl_easy_perform() failed for IWV: " << curl_easy_strerror(status) << endl;
+        free(iwv_data.memory);
+        curl_easy_cleanup(handle);
+        curl_global_cleanup();
+        return -1; // Indicate failure to retrieve IWV data
+    }
+
+    // Pass IWV data to the IWV Stock object
+    iwv.PassData(iwv_data);
+    iwv.Clipping(N);
+    cout << "Successfully retrieved IWV data." << endl;
+
+    free(iwv_data.memory);
+
+    curl_easy_cleanup(handle);
+    curl_global_cleanup();
+
+    return 0; // Success
 }
 
 

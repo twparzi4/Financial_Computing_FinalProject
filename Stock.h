@@ -73,5 +73,7 @@ public:
 
     // overload copy constructor
     Stock(const Stock &source);
-};
+    vector<double> CalculateDailyReturns() const;
+    vector<double> CalculateMarketReturns(const Stock& iwv) {return iwv.CalculateDailyReturns();}
 
+};

@@ -28,7 +28,8 @@ public:
 
     void GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N);
 
-    int GetData(StocksGroup &stocks, int N);  // Retrieve data and store it in stocks
+    //int GetData(StocksGroup &stocks, int N);  // Retrieve data and store it in stocks
+    int GetData(StocksGroup &stocks, int N, Stock &iwv);
 };
 
 void* myrealloc(void* ptr, size_t size);
