@@ -284,8 +284,6 @@ StocksGroup BootstrapSample(const StocksGroup& group, size_t sample_size) {
     return sample;
 }
 
-
-
 //
 vector<double> ComputeStandardDeviation(const std::vector<std::vector<double>>& bootstrap_results, size_t num_days) {
     
