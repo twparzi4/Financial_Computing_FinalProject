@@ -226,8 +226,7 @@ void ExportCAARToFile(const vector<double>& caar_group1,
     file.close();
 }
 
-
-
+//// Plotting charts with gnuplot
 void PlotCAARWithGnuplot(const std::string& data_file, const std::string& script_file) {
     std::string command = "gnuplot " + script_file;
     int result = std::system(command.c_str());
@@ -236,7 +235,28 @@ void PlotCAARWithGnuplot(const std::string& data_file, const std::string& script
     }
 }
 
+// Dynamically generated gnuplot scripts
+void CreateGnuplotScript(const string& script_file, const string& data_file) {
+    ofstream script(script_file);
 
+    if (!script.is_open()) {
+        cerr << "Error: Unable to create gnuplot script file." << endl;
+        return;
+    }
+
+    script << "set terminal pngcairo size 800,600\n"
+           << "set output 'caar_plot.png'\n"
+           << "set title 'Cumulative Average Abnormal Returns (CAAR)'\n"
+           << "set xlabel 'Days Relative to Earnings Announcement'\n"
+           << "set ylabel 'CAAR'\n"
+           << "set grid\n"
+           << "plot '" << data_file << "' using 1:2 with lines title 'Beat Estimate Group',\\\n"
+           << "     '" << data_file << "' using 1:3 with lines title 'Meet Estimate Group',\\\n"
+           << "     '" << data_file << "' using 1:4 with lines title 'Miss Estimate Group'\n";
+
+    script.close();
+    cout << "Gnuplot script written to " << script_file << endl;
+}
 
 // Randomly sample `sample_size` stocks from the input group
 StocksGroup BootstrapSample(const StocksGroup& group, size_t sample_size) {

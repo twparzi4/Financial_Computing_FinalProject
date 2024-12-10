@@ -51,15 +51,20 @@ int main()
     std::vector<double> caar_group1 = {0.01, 0.012, 0.014, 0.016, 0.018};
     std::vector<double> caar_group2 = {0.02, 0.021, 0.023, 0.025, 0.027};
     std::vector<double> caar_group3 = {-0.01, -0.008, -0.006, -0.004, -0.002};
+    
+    string data_file = "caar_data.dat";
+    string script_file = "plot_caar.gp";
 
-    // Export data to file
-    std::string data_file = "caar_data.dat";
+    // 导出 CAAR 数据到文件
     ExportCAARToFile(caar_group1, caar_group2, caar_group3, data_file);
 
-    // Generate plot using gnuplot
-    std::string script_file = "plot_caar.gp";
+    // 动态生成 gnuplot 脚本
+    CreateGnuplotScript(script_file, data_file);
+
+    // 使用 gnuplot 绘制图表
     PlotCAARWithGnuplot(data_file, script_file);
 
+    cout << "CAAR plot generated using gnuplot." << endl;
 
     return 0;
 }
