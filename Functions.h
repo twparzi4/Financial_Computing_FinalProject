@@ -203,8 +203,7 @@ void PrintMetricsMatrix(const Matrix& metrics_matrix) {
 }
 
 
-//Export CAAR Data to a File
-
+// Export CAAR Data to a File
 void ExportCAARToFile(const vector<double>& caar_group1, 
                       const vector<double>& caar_group2, 
                       const vector<double>& caar_group3, 
@@ -225,8 +224,7 @@ void ExportCAARToFile(const vector<double>& caar_group1,
 
     file.close();
 }
-
-//// Plotting charts with gnuplot
+// Plotting charts with gnuplot
 void PlotCAARWithGnuplot(const std::string& data_file, const std::string& script_file) {
     std::string command = "gnuplot " + script_file;
     int result = std::system(command.c_str());
