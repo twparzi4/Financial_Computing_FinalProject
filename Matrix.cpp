@@ -1,5 +1,5 @@
 # include "Matrix.h"
-
+# include <iomanip>
 // Multiply a Matrix by a Vector
 // Parameters:
 //   - C: The input matrix (MxN dimensions)
@@ -118,11 +118,11 @@ double operator^(const Vector& V, const Vector& W) {
 //   - V: The vector to print
 // Returns:
 //   - The modified output stream
-std::ostream& operator<<(std::ostream& out, Vector& V) {
-    for (const auto& val : V) { // Loop over each element in the vector
-        out << val << " "; // Print each element followed by a space
+std::ostream& operator<<(std::ostream& out, const Vector& V) {
+    for (const auto& val : V) {
+        out << val << " ";
     }
-    out << std::endl; // Add a newline after the vector
+    out << '\n'; 
     return out;
 }
 
@@ -133,12 +133,12 @@ std::ostream& operator<<(std::ostream& out, Vector& V) {
 //   - W: The matrix to print
 // Returns:
 //   - The modified output stream
-std::ostream& operator<<(std::ostream& out, Matrix& W) {
-    for (const auto& row : W) { // Loop over each row in the matrix
-        for (const auto& val : row) { // Loop over each element in the row
-            out << std::setw(10) << val << " "; // Print each element with fixed width
+std::ostream& operator<<(std::ostream& out, const Matrix& W) {
+    for (const auto& row : W) {
+        for (const auto& val : row) {
+            out << std::setw(10) << val << " ";
         }
-        out << std::endl; // Add a newline after each row
+        out << '\n'; 
     }
     return out;
 }
