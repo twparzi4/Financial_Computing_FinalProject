@@ -12,6 +12,7 @@
 #include "Matrix.h"
 
 
+
 using namespace std;
 
 int main() {
@@ -24,6 +25,25 @@ int main() {
 
     int N = 50; // Default N value
     Retriever loader;
+    // added
+    std::vector<double> aar_group1 = {0.1, 0.2, 0.15, 0.05, 0.1, 0.05, -0.1, -0.15, 0.05, 0.1, 0.2};
+    std::vector<double> aar_group2 = {0.05, 0.1, 0.08, 0.03, 0.07, 0.02, -0.05, -0.1, 0.02, 0.07, 0.12};
+    std::vector<double> aar_group3 = {-0.05, -0.02, 0.01, 0.03, 0.04, -0.01, -0.02, -0.03, 0.01, 0.05, 0.08};
+    
+    std::vector<double> aar_std_group1 = {0.02, 0.03, 0.025, 0.01, 0.015, 0.02, 0.03, 0.025, 0.01, 0.015, 0.02};
+    std::vector<double> aar_std_group2 = {0.01, 0.02, 0.018, 0.007, 0.012, 0.015, 0.02, 0.018, 0.007, 0.012, 0.015};
+    std::vector<double> aar_std_group3 = {0.015, 0.025, 0.022, 0.008, 0.013, 0.018, 0.022, 0.019, 0.008, 0.013, 0.018};
+
+    // CAAR and CAAR-STD would be populated similarly
+    std::vector<double> caar_group1 = aar_group1; // Placeholder for example
+    std::vector<double> caar_std_group1 = aar_std_group1; // Placeholder for example
+
+    // Combine all groups into AllEsti
+StocksGroup AllEsti = BestEsti;
+AllEsti.insert(MeetEsti.begin(), MeetEsti.end());
+AllEsti.insert(MissEsti.begin(), MissEsti.end());
+
+
 
     while (true) {
         // Menu options
@@ -31,8 +51,11 @@ int main() {
              << "1. Enter N and retrieve historical price data\n"
              << "2. Pull information for one stock\n"
              << "3. Show AAR, AAR-STD, CAAR, and CAAR-STD for one group\n"
-             << "4. Show gnuplot graph for CAAR\n"
-             << "5. Exit\n"
+             << "4. Show gnuplot graph for AAR\n"
+             << "5. Show gnuplot graph for AAR-STD\n"
+             << "6. Show gnuplot graph for CAAR\n"
+             << "7. Show gnuplot graph for CAAR-STD\n"
+             << "8. Exit\n"
              << "Enter your choice: ";
 
         int choice;
@@ -181,7 +204,7 @@ int main() {
 
                 break;
             }
-
+/*
             case 4: {
                 // Show gnuplot graph for CAAR
                 vector<double> caar_group1, caar_group2, caar_group3;
@@ -200,9 +223,50 @@ int main() {
 
                 cout << "Graph generated using gnuplot.\n";
                 break;
-            }
+            } */
+
+            case 4:
+                WritePlotData("aar_data.dat", aar_group1, aar_group2, aar_group3, N);
+                GenerateGnuplotScript("aar_plot.gp", "aar_data.dat", "aar_plot.png",
+                      "Average Abnormal Returns (AAR)", "Days Relative to Earnings Announcement", "AAR");
+
+                break;
 
             case 5:
+                WritePlotData("aar_std_data.dat", aar_std_group1, aar_std_group2, aar_std_group3, N);
+                GenerateGnuplotScript("aar_std_plot.gp", "aar_std_data.dat", "aar_std_plot.png",
+                      "AAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(AAR)");
+
+                break;
+
+            case 6: {
+                vector<double> caar_group1, caar_group2, caar_group3;
+                
+                CalculateAAR_CAAR_Std(BestEsti, market_returns, N, caar_group1, caar_group1, caar_group1, caar_group1);
+                CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, caar_group2, caar_group2, caar_group2, caar_group2);
+                CalculateAAR_CAAR_Std(MissEsti, market_returns, N, caar_group3, caar_group3, caar_group3, caar_group3);
+                ExportCAARToFile(caar_group1, caar_group2, caar_group3, "caar_data.dat", N);
+                GenerateGnuplotScript("caar_plot.gp", "caar_data.dat", "caar_plot.png",
+                      "Cumulative Average Abnormal Returns (CAAR)", "Days Relative to Earnings Announcement", "CAAR");
+                cout << "CAAR graph generated using Gnuplot.\n";
+                break;
+                }
+                      
+                case 7: {
+                    vector<double> caar_group1, caar_group2, caar_group3;
+                    vector<double> caar_std_group1, caar_std_group2, caar_std_group3;
+                    CalculateAAR_CAAR_Std(BestEsti, market_returns, N, aar_group1, caar_group1, aar_std_group1, caar_std_group1);
+                    CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, aar_group2, caar_group2, aar_std_group2, caar_std_group2);
+                    CalculateAAR_CAAR_Std(MissEsti, market_returns, N, aar_group3, caar_group3, aar_std_group3, caar_std_group3);
+                    
+                    WritePlotData("caar_std_data.dat", caar_std_group1, caar_std_group2, caar_std_group3, N);
+                    GenerateGnuplotScript("caar_std_plot.gp", "caar_std_data.dat", "caar_std_plot.png",
+                          "CAAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(CAAR)");
+                    cout << "CAAR-STD graph generated using Gnuplot.\n";
+                    break;
+                    }
+
+            case 8:
                 // Exit the program
                 cout << "Exiting the program. Goodbye!\n";
                 return 0;

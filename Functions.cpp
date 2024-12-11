@@ -47,7 +47,27 @@ void ExtractEarningsInfo(StocksGroup &TotalStocks)
 void PrintStockInfo(StocksGroup &S)
 {
     /*
-    Print info of the stock that user inputs
+    Print info of the stock that user inputsvoid ExportCAARToFile(const vector<double>& caar_group1, 
+                      const vector<double>& caar_group2, 
+                      const vector<double>& caar_group3, 
+                      const string& filename, int N) {
+    ofstream file(filename);
+
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open file for writing CAAR data.");
+    }
+
+    int num_days = 2 * N + 1; // Correct range for days
+    for (int i = 0; i < num_days; ++i) {
+        int day_index = i - N; // Ensure indices range from -N to +N
+        file << day_index << " "
+             << caar_group1[i] << " "
+             << caar_group2[i] << " "
+             << caar_group3[i] << "\n";
+    }
+
+    file.close();
+}
     */
     string inputKey;
 
@@ -229,6 +249,7 @@ void PrintMetricsMatrix(const Matrix& metrics_matrix) {
 
 
 // Export CAAR Data to a File
+/*
 void ExportCAARToFile(const vector<double>& caar_group1, 
                       const vector<double>& caar_group2, 
                       const vector<double>& caar_group3, 
@@ -249,6 +270,30 @@ void ExportCAARToFile(const vector<double>& caar_group1,
 
     file.close();
 }
+*/
+
+void ExportCAARToFile(const vector<double>& caar_group1, 
+                      const vector<double>& caar_group2, 
+                      const vector<double>& caar_group3, 
+                      const string& filename, int N) {
+    ofstream file(filename);
+
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open file for writing CAAR data.");
+    }
+
+    int num_days = 2 * N + 1; // Correct range for days
+    for (int i = 0; i < num_days; ++i) {
+        int day_index = i - N; // Ensure indices range from -N to +N
+        file << day_index << " "
+             << caar_group1[i] << " "
+             << caar_group2[i] << " "
+             << caar_group3[i] << "\n";
+    }
+
+    file.close();
+}
+
 // Plotting charts with gnuplot
 void PlotCAARWithGnuplot(const std::string& data_file, const std::string& script_file) {
     std::string command = "gnuplot " + script_file;
@@ -259,6 +304,87 @@ void PlotCAARWithGnuplot(const std::string& data_file, const std::string& script
 }
 
 // Dynamically generated gnuplot scripts
+void WritePlotData(const string& filename, const vector<double>& group1,
+                   const vector<double>& group2, const vector<double>& group3, int N) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open file for writing data.");
+    }
+
+    int num_days = 2 * N + 1;
+    for (int i = 0; i < num_days; ++i) {
+        int day_index = i - N;
+        file << day_index << " " << group1[i] << " " << group2[i] << " " << group3[i] << "\n";
+    }
+
+    file.close();
+}
+
+
+void WritePlotDataSingle(const string& filename, const vector<double>& group, int N) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open file for writing plot data.");
+    }
+
+    for (size_t i = 0; i < group.size(); ++i) {
+        int day_index = static_cast<int>(i) - N;
+        file << day_index << " " << group[i] << "\n";
+    }
+
+    file.close();
+}
+
+void GenerateGnuplotScript(const std::string& script_file, const std::string& data_file, 
+                           const std::string& output_file, const std::string& title, 
+                           const std::string& xlabel, const std::string& ylabel) {
+    std::ofstream script(script_file);
+    if (!script.is_open()) {
+        throw std::runtime_error("Failed to create Gnuplot script file.");
+    }
+
+    script << "set terminal png size 800,600\n";
+    script << "set output '" << output_file << "'\n";
+    script << "set title '" << title << "'\n";
+    script << "set xlabel '" << xlabel << "'\n";
+    script << "set ylabel '" << ylabel << "'\n";
+    script << "set grid\n";
+    script << "plot '" << data_file << "' using 1:2 with lines title 'Group 1', \\\n";
+    script << "     '" << data_file << "' using 1:3 with lines title 'Group 2', \\\n";
+    script << "     '" << data_file << "' using 1:4 with lines title 'Group 3'\n";
+
+    script.close();
+
+    system(("gnuplot " + script_file).c_str());
+}
+
+
+
+
+void GenerateGnuplotScriptSingle(const string& data_file, const string& output_file,
+                                 const string& title, const string& xlabel, const string& ylabel) {
+    ofstream script("plot_single.gp");
+
+    if (!script.is_open()) {
+        throw runtime_error("Failed to create Gnuplot script file.");
+    }
+
+    script << "set terminal png size 800,600\n";
+    script << "set output '" << output_file << "'\n";
+    script << "set title '" << title << "'\n";
+    script << "set xlabel '" << xlabel << "'\n";
+    script << "set ylabel '" << ylabel << "'\n";
+    script << "set grid\n";
+    script << "plot '" << data_file << "' using 1:2 with lines title 'CAAR STD'\n";
+
+    script.close();
+    system("gnuplot plot_single.gp");
+}
+
+
+
+
+/*
 void CreateGnuplotScript(const string& script_file, const string& data_file) {
     ofstream script(script_file);
 
@@ -279,7 +405,7 @@ void CreateGnuplotScript(const string& script_file, const string& data_file) {
 
     script.close();
     cout << "Gnuplot script written to " << script_file << endl;
-}
+} */
 
 // Randomly sample `sample_size` stocks from the input group
 StocksGroup BootstrapSample(const StocksGroup& group, size_t sample_size) {
@@ -379,7 +505,7 @@ tuple<Vector, Vector> Computations(const Matrix& bs, size_t num_days)
     return make_tuple(means, stds);
 }
 
-
+/*
 void CalculateAAR_CAAR_Std(const StocksGroup& group, const std::vector<double>& market_returns, int N,
                            std::vector<double>& aar, std::vector<double>& caar,
                            std::vector<double>& aar_std, std::vector<double>& caar_std) {
@@ -423,4 +549,32 @@ void CalculateAAR_CAAR_Std(const StocksGroup& group, const std::vector<double>& 
     // Calculate standard deviations
     aar_std = ComputeStandardDeviation(bootstrap_aar, num_days);
     caar_std = ComputeStandardDeviation(bootstrap_caar, num_days);
+}
+*/
+
+void CalculateAAR_CAAR_Std(const StocksGroup& group, const vector<double>& market_returns, int N,
+                           vector<double>& aar, vector<double>& caar,
+                           vector<double>& aar_std, vector<double>& caar_std) {
+    size_t num_bootstrap = 40; // Define number of bootstrap iterations
+    size_t sample_size = 30;   // Define sample size
+    size_t num_days = 2 * N + 1;
+
+    vector<vector<double>> bootstrap_aar(num_bootstrap, vector<double>(num_days, 0.0));
+    vector<vector<double>> bootstrap_caar(num_bootstrap, vector<double>(num_days, 0.0));
+
+    for (size_t b = 0; b < num_bootstrap; ++b) {
+        StocksGroup sample = BootstrapSample(group, sample_size);
+
+        vector<double> sample_aar(num_days, 0.0);
+        vector<double> sample_caar(num_days, 0.0);
+
+        CalculateAAR(sample, market_returns, N, sample_aar); // Calculate AAR
+        CalculateCAAR(sample_aar, sample_caar);              // Calculate CAAR
+
+        bootstrap_aar[b] = sample_aar;
+        bootstrap_caar[b] = sample_caar;
+    }
+
+    tie(aar, aar_std) = Computations(bootstrap_aar, num_days); // Compute AAR and AAR-STD
+    tie(caar, caar_std) = Computations(bootstrap_caar, num_days); // Compute CAAR and CAAR-STD
 }
