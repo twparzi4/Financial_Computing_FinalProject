@@ -12,7 +12,7 @@
 using namespace std;
 const char *EarningAncmntFile = "Russell3000EarningsAnnouncements.csv";
 
-void ExtractEarningsInfo(StocksGroup &TotalStocks, vector<double> &surprises)
+void ExtractEarningsInfo(StocksGroup &TotalStocks)
 {
     // Extract stock info into Total Stocks, but push surprises data into a double vector for grouping
     ifstream fin;
@@ -40,7 +40,6 @@ void ExtractEarningsInfo(StocksGroup &TotalStocks, vector<double> &surprises)
 
         // Initiate a stock instance and store information in TotalStock
         Stock stk(ticker, date, period_ending, stod(estimate), stod(reported), stod(surprise), stod(surprise_pct));
-        surprises.push_back(stod(surprise_pct));
         TotalStocks[ticker] = stk;
     }
 }
@@ -88,49 +87,76 @@ void PrintStockInfo(StocksGroup &S)
     }
 }
 
-double calculatePercentile(vector<double>& data, double percentile) {
-    if (data.empty() || percentile < 0.0 || percentile > 100.0) {
-        throw invalid_argument("Invalid data or percentile.");
-    }
+// double calculatePercentile(vector<double>& data, double percentile) {
+//     if (data.empty() || percentile < 0.0 || percentile > 100.0) {
+//         throw invalid_argument("Invalid data or percentile.");
+//     }
 
-    size_t n = data.size();
-    size_t index = static_cast<size_t>(percentile / 100.0 * (n - 1));
+//     size_t n = data.size();
+//     size_t index = static_cast<size_t>(percentile / 100.0 * (n - 1));
 
-    // Partially sort the vector to find the nth element
-    nth_element(data.begin(), data.begin() + index, data.end());
+//     // Partially sort the vector to find the nth element
+//     nth_element(data.begin(), data.begin() + index, data.end());
 
-    return data[index];
-}
+//     return data[index];
+// }
 
 
-void StocksGrouping(StocksGroup &H, StocksGroup &M, StocksGroup &L, StocksGroup T, vector<double> &surprises)
+// void StocksGrouping(StocksGroup &H, StocksGroup &M, StocksGroup &L, StocksGroup T, vector<double> &surprises)
+// {
+//     // Group the stocks based on its surprise
+//     // Calculate 33rd and 67th percentile for the surprises data
+//     double p33 = calculatePercentile(surprises, 33.0);
+//     double p66 = calculatePercentile(surprises, 66.0);
+
+//     auto it = T.begin();
+//     for(; it != T.end(); it++)
+//     {
+//         string tic = it->first;
+//         Stock stk = it->second;
+        
+//         if (stk.GetSurprisePct() > p66)
+//         {
+//             stk.SetGroup("Beat Estimate Group");
+//             H[tic] = stk;
+//         }
+//         else if (stk.GetSurprisePct() <= p33)
+//         {
+//             stk.SetGroup("Miss Estimate Group");
+//             L[tic] = stk;
+//         }
+//         else 
+//         {
+//             stk.SetGroup("Meet Estimate Group");
+//             M[tic] = stk;
+//         }
+//     }
+// }
+
+void StocksGrouping(StocksGroup& H, StocksGroup& M, StocksGroup& L, StocksGroup& T)
 {
-    // Group the stocks based on its surprise
-    // Calculate 33rd and 67th percentile for the surprises data
-    double p33 = calculatePercentile(surprises, 33.0);
-    double p66 = calculatePercentile(surprises, 66.0);
-
-    auto it = T.begin();
-    for(; it != T.end(); it++)
+    vector<Pair> ValidStocks;
+    for(auto& pair : T)
     {
-        string tic = it->first;
-        Stock stk = it->second;
-        if (stk.GetSurprisePct() > p66)
-        {
-            stk.SetGroup("Beat Estimate Group");
-            H[tic] = stk;
-        }
-        else if (stk.GetSurprisePct() <= p33)
-        {
-            stk.SetGroup("Miss Estimate Group");
-            L[tic] = stk;
-        }
-        else 
-        {
-            stk.SetGroup("Meet Estimate Group");
-            M[tic] = stk;
-        }
+        // Screen out stocks with abnormal data status
+        if (pair.second.GetStatus() == 0) { ValidStocks.push_back(pair); }
     }
+
+    // sort ValidStocks by surprise_pct
+    sort(ValidStocks.begin(), ValidStocks.end(), 
+        [](Pair& a, Pair& b) { return a.second.GetSurprisePct() < b.second.GetSurprisePct(); }); // ascending
+
+    size_t one_third = ValidStocks.size() / 3;
+
+    pair<string, Stock> temp;
+    for (size_t i = 0; i < one_third; i++) { temp = ValidStocks[i]; L[temp.first] = temp.second; }
+    for (size_t i = one_third; i < 2 * one_third; i++) {temp = ValidStocks[i]; M[temp.first] = temp.second; }
+    for (size_t i = 2 * one_third; i< ValidStocks.size(); i++) { temp = ValidStocks[i]; H[temp.first] = temp.second; }
+
+    // For checking purposes, print out the sizes of StocksGroups
+    cout << "BeatEsti # of stocks: " << H.size() << endl;
+    cout << "MeetEsti # of stocks: " << M.size() << endl;
+    cout << "MissEsti # of stocks: " << L.size() << endl;
 }
 
 

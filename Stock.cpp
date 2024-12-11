@@ -141,6 +141,8 @@ void Stock::Clipping(int N) {
     double open, high, low, close, adjclose, volume;
     int count_before = 0, count_after = 0;
     bool encountered_day0 = false; // Tracks if DayZero has been encountered
+    bool day0_TradingDay = false; // Track if current earnings announcement date is a trading day
+    string possible_day0;
 
     // Parse historical data
     while (getline(sData, line)) {
@@ -168,11 +170,16 @@ void Stock::Clipping(int N) {
                 ++count_before;
             } else if (sDate >= report_date && !encountered_day0) {
                 encountered_day0 = true;
+                possible_day0 = sDate;
+                if (sDate == report_date) { day0_TradingDay = true; }
             } else if (sDate > report_date && encountered_day0) {
                 ++count_after;
             }
         }
     }
+    // If day0_TraingDay remains false after the above iteratin, then report date of the current stock is not a trading day.
+    // Since we need to reset day0 to the first trading day after report_date in this scenario,  we have to deduce 1 from count_after
+    if (day0_TradingDay == false) { count_after -= 1; report_date = possible_day0; cout << "Reset report date for stock " << ticker << endl; }
 
     // Validate data sufficiency
     if (count_before < N || count_after < N) {

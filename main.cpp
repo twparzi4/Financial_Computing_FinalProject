@@ -7,6 +7,8 @@
 #include "curl/curl.h"
 #include "Functions.h"
 #include "Retriever.h"
+#include <chrono>
+
 
 using namespace std;
 
@@ -46,17 +48,25 @@ int main() {
                     break;
                 }
 
+                auto start_time = chrono::high_resolution_clock::now();
                 // Extract earnings info and retrieve data
-                ExtractEarningsInfo(TotalStock, surprises);
+                ExtractEarningsInfo(TotalStock);
                 if (loader.GetData(TotalStock, N, iwv) == -1) {
                     cout << "Failed to retrieve data for some stocks or IWV.\n";
                     break;
                 }
+                  
+                auto end_time = chrono::high_resolution_clock::now();
+                chrono::duration<double> elapsed = end_time - start_time;
+                cout << "Time taken for retrieve data:" << elapsed.count() <<" seconds" << endl;
 
                 // Group stocks based on earnings surprises
-                StocksGrouping(BestEsti, MeetEsti, MissEsti, TotalStock, surprises);
+                StocksGrouping(BestEsti, MeetEsti, MissEsti, TotalStock);
                 market_returns = iwv.CalculateDailyReturns(); // Calculate IWV daily returns
                 cout << "Data retrieved and grouped successfully.\n";
+              
+
+                
                 break;
             }
 

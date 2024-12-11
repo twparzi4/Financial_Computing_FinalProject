@@ -7,10 +7,10 @@
 
 extern const char* EarningAncmntFile;
 
-void ExtractEarningsInfo(StocksGroup& TotalStocks, std::vector<double>& surprises);
+void ExtractEarningsInfo(StocksGroup& TotalStocks);
 void PrintStockInfo(StocksGroup& S);
 double calculatePercentile(std::vector<double>& data, double percentile);
-void StocksGrouping(StocksGroup& H, StocksGroup& M, StocksGroup& L, StocksGroup T, std::vector<double>& surprises);
+void StocksGrouping(StocksGroup& H, StocksGroup& M, StocksGroup& L, StocksGroup& T);
 void CalculateAAR(const StocksGroup& group, const std::vector<double>& market_returns, int N, std::vector<double>& aar);
 void CalculateCAAR(const std::vector<double>& aar, std::vector<double>& caar);
 double Average(const std::vector<double>& data);

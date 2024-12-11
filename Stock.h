@@ -70,6 +70,7 @@ public:
     // Setter function
     void SetGroup(std::string g) { group = g; }
     void PassData(struct MemoryStruct &source) { lock_guard<mutex> lock(stockMutex); sData.str(source.memory); }
+    void ModifyDay0(string new_date) { report_date = new_date; }
 
     // overload assignment operator
     Stock& operator=(const Stock &source);

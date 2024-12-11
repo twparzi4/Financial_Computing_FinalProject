@@ -230,6 +230,7 @@ void Retriever::GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::
     CURLcode status;
     curl_global_init(CURL_GLOBAL_ALL);
     handle = curl_easy_init();
+    
 
     if (handle) {
         for (auto it = start; it != end; ++it) {
