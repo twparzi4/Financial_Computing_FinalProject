@@ -149,19 +149,25 @@ int main() {
 
                 }
                 
-                for (auto itr = aar_bs.begin(); itr != aar_bs.end(); itr++)
-                {
-                    double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
-                    aar.push_back(mu);
-                }
-                for (auto itr = caar_bs.begin(); itr != caar_bs.end(); itr++)
-                {
-                    double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
-                    caar.push_back(mu);
-                }
+                // for (auto itr = aar_bs.begin(); itr != aar_bs.end(); itr++)
+                // {
+                //     double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
+                //     aar.push_back(mu);
+                // }
+                // for (auto itr = caar_bs.begin(); itr != caar_bs.end(); itr++)
+                // {
+                //     double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
+                //     caar.push_back(mu);
+                // }
+                
 
-                aar_std = ComputeStandardDeviation(aar_bs, 2 * N + 1);
-                caar_std = ComputeStandardDeviation(caar_bs, 2 * N + 1);
+                // aar_std = ComputeStandardDeviation(aar_bs, 2 * N + 1);
+                // caar_std = ComputeStandardDeviation(caar_bs, 2 * N + 1);
+                tie(aar, aar_std) = Computations(aar_bs, 2 * N + 1);
+                tie(caar, caar_std) = Computations(caar_bs, 2 * N + 1);
+
+                cout << "size of aar: " << aar.size();
+                cout << "size of caar: " << caar.size();
 
                 // Populate metrics matrix with averaged results
                 // PopulateMetricsMatrix(aar, caar, aar_std, caar_std, metrics, group_choice - 1);

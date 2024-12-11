@@ -310,26 +310,73 @@ StocksGroup BootstrapSample(const StocksGroup& group, size_t sample_size) {
 }
 
 //
-vector<double> ComputeStandardDeviation(const std::vector<std::vector<double>>& bootstrap_results, size_t num_days) {
+// vector<double> ComputeStandardDeviation(const std::vector<std::vector<double>>& bootstrap_results, size_t num_days) {
     
-    vector<double> std_dev(num_days, 0.0);
-    for (size_t t = 0; t < num_days; ++t) {
-        double mean = 0.0;
-        double sum_squared_diff = 0.0;
+//     vector<double> std_dev(num_days, 0.0);
+//     for (size_t t = 0; t < num_days; ++t) {
+//         double mean = 0.0;
+//         double sum_squared_diff = 0.0;
 
-        for (const auto& sample : bootstrap_results) {
-            mean += sample[t];
+//         for (const auto& sample : bootstrap_results) {
+//             mean += sample[t];
+//         }
+//         mean /= bootstrap_results.size();
+
+//         for (const auto& sample : bootstrap_results) {
+//             sum_squared_diff += pow(sample[t] - mean, 2);
+//         }
+
+//         std_dev[t] = sqrt(sum_squared_diff / bootstrap_results.size());
+//     }
+
+//     return std_dev;
+// }
+
+Vector ComputeStandardDeviation(const Matrix& bs, size_t num_days)
+{
+    // Each element in Vector is a vector<double> of aar/caar series from one resample
+    // We need to calculate std cross-sectional
+    size_t num_bs = bs.size();  // Number of resample exercised
+    double cross_sectional_mean, cross_sectional_sqmean;
+    Vector stds;
+
+    for (size_t i = 0; i != num_days; i++)
+    {
+        cross_sectional_mean = 0.0;
+        cross_sectional_sqmean = 0.0;
+        for (size_t j = 0; j != num_bs; j++)
+        {
+            cross_sectional_mean = (j * cross_sectional_mean + bs[j][i]) / (j + 1.0);
+            cross_sectional_sqmean = (j * cross_sectional_sqmean + pow(bs[j][i], 2)) / (j + 1.0);
         }
-        mean /= bootstrap_results.size();
-
-        for (const auto& sample : bootstrap_results) {
-            sum_squared_diff += pow(sample[t] - mean, 2);
-        }
-
-        std_dev[t] = sqrt(sum_squared_diff / bootstrap_results.size());
+        stds.push_back(sqrt(cross_sectional_sqmean - pow(cross_sectional_mean, 2)) / sqrt(num_bs - 1.0));
     }
 
-    return std_dev;
+    return stds;
+}
+
+tuple<Vector, Vector> Computations(const Matrix& bs, size_t num_days)
+{
+    // Each element in Vector is a vector<double> of aar/caar series from one resample
+    // We need to calculate std cross-sectional
+    size_t num_bs = bs.size();  // Number of resample exercised
+    double cross_sectional_mean, cross_sectional_sqmean;
+    Vector means, stds;
+
+    for (size_t i = 0; i != num_days; i++)
+    {
+        cross_sectional_mean = 0.0;
+        cross_sectional_sqmean = 0.0;
+        for (size_t j = 0; j != num_bs; j++)
+        {
+            cross_sectional_mean = (j * cross_sectional_mean + bs[j][i]) / (j + 1.0);
+            cross_sectional_sqmean = (j * cross_sectional_sqmean + pow(bs[j][i], 2)) / (j + 1.0);
+        }
+        means.push_back(cross_sectional_mean);
+        stds.push_back(sqrt(cross_sectional_sqmean - pow(cross_sectional_mean, 2)) / sqrt(num_bs - 1.0));
+    }
+
+    return make_tuple(means, stds);
 }
 
 

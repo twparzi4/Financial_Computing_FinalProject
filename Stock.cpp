@@ -178,8 +178,11 @@ void Stock::Clipping(int N) {
         }
     }
     // If day0_TraingDay remains false after the above iteratin, then report date of the current stock is not a trading day.
-    // Since we need to reset day0 to the first trading day after report_date in this scenario,  we have to deduce 1 from count_after
-    if (day0_TradingDay == false) { count_after -= 1; report_date = possible_day0; cout << "Reset report date for stock " << ticker << endl; }
+    // We need to have the closest following trading day as our new report_date.
+    // However, there is no need to change count_after because if report_date is not a trading day, then our programme above
+    // have already treat the trading day right after report_date as the actual report date and start counting count_after
+    // on the next trading day
+    if (day0_TradingDay == false) { report_date = possible_day0; cout << "Reset report date for stock " << ticker << endl; }
 
     // Validate data sufficiency
     if (count_before < N || count_after < N) {
