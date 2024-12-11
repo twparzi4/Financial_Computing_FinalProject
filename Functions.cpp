@@ -284,7 +284,7 @@ void ExportCAARToFile(const vector<double>& caar_group1,
 
     int num_days = 2 * N + 1; // Correct range for days
     for (int i = 0; i < num_days; ++i) {
-        int day_index = i - N; // Ensure indices range from -N to +N
+        int day_index = i - N + 1; // Ensure indices range from -N to +N
         file << day_index << " "
              << caar_group1[i] << " "
              << caar_group2[i] << " "
@@ -313,7 +313,7 @@ void WritePlotData(const string& filename, const vector<double>& group1,
 
     int num_days = 2 * N + 1;
     for (int i = 0; i < num_days; ++i) {
-        int day_index = i - N;
+        int day_index = i - N + 1;
         file << day_index << " " << group1[i] << " " << group2[i] << " " << group3[i] << "\n";
     }
 
