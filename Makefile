@@ -2,8 +2,8 @@ CC = g++
 CFLAGS = -Wall -ggdb3 -std=c++11 -lcurl -pthread
 
 # 编译主项目的可执行文件
-FinalProject: main.o Retriever.o Stock.o Functions.o
-	$(CC) $(CFLAGS) -o FinalProject main.o Retriever.o Stock.o Functions.o
+FinalProject: main.o Retriever.o Stock.o Functions.o Matrix.o
+	$(CC) $(CFLAGS) -o FinalProject main.o Retriever.o Stock.o Functions.o Matrix.o
 
 # 编译 main0.cpp 的可执行文件
 TestProject: main0.o Retriever.o Stock.o
@@ -25,8 +25,11 @@ Retriever.o: Retriever.cpp Retriever.h
 Stock.o: Stock.cpp Stock.h
 	$(CC) $(CFLAGS) -c Stock.cpp
 
-Functions.o: Functions.h Functions.cpp
-	$(CC) $(CFLAGS) -c Functions.cpp
+Functions.o: Functions.h Functions.cpp Matrix.cpp
+	$(CC) $(CFLAGS) -c Functions.cpp Matrix.cpp
+
+Matrix.o: Matrix.h Matrix.cpp 
+	$(CC) #(CFLAGS) -c Matrix.cpp
 
 # 清理命令
 clean:

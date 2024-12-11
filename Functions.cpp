@@ -54,6 +54,8 @@ void PrintStockInfo(StocksGroup &S)
     while (true)
     {
         cout << "Enter a stock's ticker: ";
+        // Prompt to return to the menu or continue
+        cout << "\n (If you want to return to the menu, press Enter. Otherwise, input the next ticker.)\n";
         getline(cin, inputKey);
 
         // If input is empty, quit
@@ -79,6 +81,8 @@ void PrintStockInfo(StocksGroup &S)
                  << "Historical Price Information: " << endl;
             
             it->second.PrintHistoricalData();
+            // Prompt to return to the menu or continue
+            cout << "\n(If you want to return to the menu, press Enter. Otherwise, input the next ticker.)\n";
         }
         else
         {
@@ -286,7 +290,7 @@ StocksGroup BootstrapSample(const StocksGroup& group, size_t sample_size) {
     for (auto it = group.begin(); it != group.end(); ++it) {
         all_stocks.push_back(it);
     }
-
+    // cout << all_stocks.size() << endl;
     // Check if the group size is smaller than the sample size
     if (all_stocks.size() < sample_size) {
         throw std::runtime_error("Group size is smaller than the requested sample size.");

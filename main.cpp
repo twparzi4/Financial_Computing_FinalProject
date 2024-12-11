@@ -8,6 +8,8 @@
 #include "Functions.h"
 #include "Retriever.h"
 #include <chrono>
+#include <numeric>
+#include "Matrix.h"
 
 
 using namespace std;
@@ -87,7 +89,8 @@ int main() {
                 cin >> group_choice;
                 cin.ignore();
 
-                vector<double> aar, caar, aar_std, caar_std;
+                Vector aar, caar, aar_std, caar_std;
+                Matrix aar_bs, caar_bs;  // Store results of bootstrap resamples. // Each element in matrix is the result series of a resample
                 StocksGroup selected_group;
 
                 // Determine which group to use
@@ -105,36 +108,71 @@ int main() {
                         cout << "Invalid group choice.\n";
                         continue;
                 }
+                
+                // cout << "size of the selected_group: " << selected_group.size();
 
                 // Bootstrapping: Perform calculations for 40 samples
                 size_t num_bootstrap = 40;
                 for (size_t b = 0; b < num_bootstrap; ++b) {
                     // Randomly sample 30 stocks
-                    try {
-                        StocksGroup sampled_group = BootstrapSample(selected_group, 30);
+                    // try {
+                    //     StocksGroup sampled_group = BootstrapSample(selected_group, 30);
 
-                        // Calculate AAR and CAAR for the sampled group
-                        vector<double> sample_aar, sample_caar;
-                        CalculateAAR_CAAR_Std(sampled_group, market_returns, N, sample_aar, sample_caar, aar_std, caar_std);
+                    //     // Calculate AAR and CAAR for the sampled group
+                    //     vector<double> sample_aar, sample_caar;
+                    //     // CalculateAAR_CAAR_Std(sampled_group, market_returns, N, sample_aar, sample_caar, aar_std, caar_std);
+                    //     CalculateAAR(sampled_group, market_returns, N, sample_aar);
+                    //     CalculateCAAR(sample_aar, sample_caar);
 
-                        // Aggregate results
-                        for (size_t t = 0; t < sample_aar.size(); ++t) {
-                            if (aar.size() <= t) aar.push_back(0.0);
-                            if (caar.size() <= t) caar.push_back(0.0);
-                            aar[t] += sample_aar[t] / num_bootstrap;
-                            caar[t] += sample_caar[t] / num_bootstrap;
-                        }
+                    //     // Aggregate results
+                    //     // for (size_t t = 0; t < sample_aar.size(); ++t) {
+                    //     //     if (aar.size() <= t) aar.push_back(0.0);
+                    //     //     if (caar.size() <= t) caar.push_back(0.0);
+                    //     //     aar[t] += sample_aar[t] / num_bootstrap;
+                    //     //     caar[t] += sample_caar[t] / num_bootstrap;
+                    //     // }
 
-                    } catch (const std::exception& e) {
-                        cerr << "Bootstrapping error: " << e.what() << endl;
-                        continue;
-                    }
+                    // } catch (const std::exception& e) {
+                    //     cerr << "Bootstrapping error: " << e.what() << endl;
+                    //     continue;
+                    // }
+
+                    StocksGroup sampled_group = BootstrapSample(selected_group, 30);
+
+                    // Calculate AAR and CAAR for the sampled group
+                    vector<double> sample_aar, sample_caar, aar_std, caar_std;
+                    CalculateAAR(sampled_group, market_returns, N, sample_aar);
+                    CalculateCAAR(sample_aar, sample_caar);
+                    
+                    aar_bs.push_back(sample_aar);
+                    caar_bs.push_back(sample_caar);
+
+                }
+                
+                for (auto itr = aar_bs.begin(); itr != aar_bs.end(); itr++)
+                {
+                    double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
+                    aar.push_back(mu);
+                }
+                for (auto itr = caar_bs.begin(); itr != caar_bs.end(); itr++)
+                {
+                    double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
+                    caar.push_back(mu);
                 }
 
-                // Populate metrics matrix with averaged results
-                PopulateMetricsMatrix(aar, caar, aar_std, caar_std, metrics, group_choice - 1);
+                aar_std = ComputeStandardDeviation(aar_bs, 2 * N + 1);
+                caar_std = ComputeStandardDeviation(caar_bs, 2 * N + 1);
 
-                PrintMetricsMatrix(metrics);
+                // Populate metrics matrix with averaged results
+                // PopulateMetricsMatrix(aar, caar, aar_std, caar_std, metrics, group_choice - 1);
+
+                // PrintMetricsMatrix(metrics);
+                cout << "AAR:" << endl << aar << endl;
+                cout << "CAAR:" << endl << caar << endl;
+                cout << "AAR_std:" << endl << aar_std << endl;
+                cout << "CAAR_std:" << endl << caar_std << endl;
+
+
                 break;
             }
 
