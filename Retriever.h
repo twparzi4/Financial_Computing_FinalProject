@@ -26,7 +26,8 @@ private:
 
 
 public:
-    Retriever() : url_common("https://eodhistoricaldata.com/api/eod/"), api_token("6743c583842130.88976468") {}
+    // Retriever() : url_common("https://eodhistoricaldata.com/api/eod/"), api_token("6743c583842130.88976468") {}
+    Retriever() : url_common("https://eodhistoricaldata.com/api/eod/"), api_token("67492fc5c76d54.04894225") {}
     Retriever(string url_, string api_) : url_common(url_), api_token(api_) {}
 
     void GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::iterator end, int N);

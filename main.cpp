@@ -25,23 +25,12 @@ int main() {
 
     int N = 50; // Default N value
     Retriever loader;
-    // added
-    std::vector<double> aar_group1 = {0.1, 0.2, 0.15, 0.05, 0.1, 0.05, -0.1, -0.15, 0.05, 0.1, 0.2};
-    std::vector<double> aar_group2 = {0.05, 0.1, 0.08, 0.03, 0.07, 0.02, -0.05, -0.1, 0.02, 0.07, 0.12};
-    std::vector<double> aar_group3 = {-0.05, -0.02, 0.01, 0.03, 0.04, -0.01, -0.02, -0.03, 0.01, 0.05, 0.08};
-    
-    std::vector<double> aar_std_group1 = {0.02, 0.03, 0.025, 0.01, 0.015, 0.02, 0.03, 0.025, 0.01, 0.015, 0.02};
-    std::vector<double> aar_std_group2 = {0.01, 0.02, 0.018, 0.007, 0.012, 0.015, 0.02, 0.018, 0.007, 0.012, 0.015};
-    std::vector<double> aar_std_group3 = {0.015, 0.025, 0.022, 0.008, 0.013, 0.018, 0.022, 0.019, 0.008, 0.013, 0.018};
 
-    // CAAR and CAAR-STD would be populated similarly
-    std::vector<double> caar_group1 = aar_group1; // Placeholder for example
-    std::vector<double> caar_std_group1 = aar_std_group1; // Placeholder for example
-
-    // Combine all groups into AllEsti
-StocksGroup AllEsti = BestEsti;
-AllEsti.insert(MeetEsti.begin(), MeetEsti.end());
-AllEsti.insert(MissEsti.begin(), MissEsti.end());
+    // Allocate Containers for CAAR and AAR
+    Vector caar_h, caar_m, caar_l;
+    Vector caar_std_h, caar_std_m, caar_std_l;
+    Vector aar_h, aar_m, aar_l;
+    Vector aar_std_h, aar_std_m, aar_std_l;
 
 
 
@@ -90,7 +79,10 @@ AllEsti.insert(MissEsti.begin(), MissEsti.end());
                 market_returns = iwv.CalculateDailyReturns(); // Calculate IWV daily returns
                 cout << "Data retrieved and grouped successfully.\n";
               
-
+                // Calculate aar, caar for plotting
+                CalculateAAR_CAAR_Std(BestEsti, market_returns, N, aar_h, caar_h, aar_std_h, caar_std_h);
+                CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, aar_m, caar_m, aar_std_m, caar_std_m);
+                CalculateAAR_CAAR_Std(MissEsti, market_returns, N, aar_l, caar_l, aar_std_l, caar_std_l);
                 
                 break;
             }
@@ -137,29 +129,7 @@ AllEsti.insert(MissEsti.begin(), MissEsti.end());
                 // Bootstrapping: Perform calculations for 40 samples
                 size_t num_bootstrap = 40;
                 for (size_t b = 0; b < num_bootstrap; ++b) {
-                    // Randomly sample 30 stocks
-                    // try {
-                    //     StocksGroup sampled_group = BootstrapSample(selected_group, 30);
-
-                    //     // Calculate AAR and CAAR for the sampled group
-                    //     vector<double> sample_aar, sample_caar;
-                    //     // CalculateAAR_CAAR_Std(sampled_group, market_returns, N, sample_aar, sample_caar, aar_std, caar_std);
-                    //     CalculateAAR(sampled_group, market_returns, N, sample_aar);
-                    //     CalculateCAAR(sample_aar, sample_caar);
-
-                    //     // Aggregate results
-                    //     // for (size_t t = 0; t < sample_aar.size(); ++t) {
-                    //     //     if (aar.size() <= t) aar.push_back(0.0);
-                    //     //     if (caar.size() <= t) caar.push_back(0.0);
-                    //     //     aar[t] += sample_aar[t] / num_bootstrap;
-                    //     //     caar[t] += sample_caar[t] / num_bootstrap;
-                    //     // }
-
-                    // } catch (const std::exception& e) {
-                    //     cerr << "Bootstrapping error: " << e.what() << endl;
-                    //     continue;
-                    // }
-
+                   
                     StocksGroup sampled_group = BootstrapSample(selected_group, 30);
 
                     // Calculate AAR and CAAR for the sampled group
@@ -172,30 +142,13 @@ AllEsti.insert(MissEsti.begin(), MissEsti.end());
 
                 }
                 
-                // for (auto itr = aar_bs.begin(); itr != aar_bs.end(); itr++)
-                // {
-                //     double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
-                //     aar.push_back(mu);
-                // }
-                // for (auto itr = caar_bs.begin(); itr != caar_bs.end(); itr++)
-                // {
-                //     double mu = accumulate((*itr).begin(), (*itr).end(), 0.0) / (2.0 * (double)N - 1.0);
-                //     caar.push_back(mu);
-                // }
-                
-
-                // aar_std = ComputeStandardDeviation(aar_bs, 2 * N + 1);
-                // caar_std = ComputeStandardDeviation(caar_bs, 2 * N + 1);
                 tie(aar, aar_std) = Computations(aar_bs, 2 * N + 1);
                 tie(caar, caar_std) = Computations(caar_bs, 2 * N + 1);
 
                 cout << "size of aar: " << aar.size();
                 cout << "size of caar: " << caar.size();
 
-                // Populate metrics matrix with averaged results
-                // PopulateMetricsMatrix(aar, caar, aar_std, caar_std, metrics, group_choice - 1);
 
-                // PrintMetricsMatrix(metrics);
                 cout << "AAR:" << endl << aar << endl;
                 cout << "CAAR:" << endl << caar << endl;
                 cout << "AAR_std:" << endl << aar_std << endl;
@@ -204,67 +157,38 @@ AllEsti.insert(MissEsti.begin(), MissEsti.end());
 
                 break;
             }
-/*
-            case 4: {
-                // Show gnuplot graph for CAAR
-                vector<double> caar_group1, caar_group2, caar_group3;
 
-                // Perform bootstrapping and calculate CAAR for each group
-                CalculateAAR_CAAR_Std(BestEsti, market_returns, N, caar_group1, caar_group1, caar_group1, caar_group1);
-                CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, caar_group2, caar_group2, caar_group2, caar_group2);
-                CalculateAAR_CAAR_Std(MissEsti, market_returns, N, caar_group3, caar_group3, caar_group3, caar_group3);
-
-                // Export data to file and plot
-                string data_file = "caar_data.dat";
-                ExportCAARToFile(caar_group1, caar_group2, caar_group3, data_file);
-
-                string script_file = "plot_caar.gp";
-                PlotCAARWithGnuplot(data_file, script_file);
-
-                cout << "Graph generated using gnuplot.\n";
-                break;
-            } */
 
             case 4:
-                WritePlotData("aar_data.dat", aar_group1, aar_group2, aar_group3, N);
+                WritePlotData("aar_data.dat", aar_h, aar_m, aar_l, N);
                 GenerateGnuplotScript("aar_plot.gp", "aar_data.dat", "aar_plot.png",
                       "Average Abnormal Returns (AAR)", "Days Relative to Earnings Announcement", "AAR");
 
                 break;
 
             case 5:
-                WritePlotData("aar_std_data.dat", aar_std_group1, aar_std_group2, aar_std_group3, N);
+                WritePlotData("aar_std_data.dat", aar_std_h, aar_std_m, aar_std_l, N);
                 GenerateGnuplotScript("aar_std_plot.gp", "aar_std_data.dat", "aar_std_plot.png",
                       "AAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(AAR)");
 
                 break;
 
             case 6: {
-                vector<double> caar_group1, caar_group2, caar_group3;
-                
-                CalculateAAR_CAAR_Std(BestEsti, market_returns, N, caar_group1, caar_group1, caar_group1, caar_group1);
-                CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, caar_group2, caar_group2, caar_group2, caar_group2);
-                CalculateAAR_CAAR_Std(MissEsti, market_returns, N, caar_group3, caar_group3, caar_group3, caar_group3);
-                ExportCAARToFile(caar_group1, caar_group2, caar_group3, "caar_data.dat", N);
+                // ExportCAARToFile(caar_group1, caar_group2, caar_group3, "caar_data.dat", N);
+                WritePlotData("caar_data.dat", caar_h, caar_m, caar_l, N);
                 GenerateGnuplotScript("caar_plot.gp", "caar_data.dat", "caar_plot.png",
                       "Cumulative Average Abnormal Returns (CAAR)", "Days Relative to Earnings Announcement", "CAAR");
                 cout << "CAAR graph generated using Gnuplot.\n";
                 break;
                 }
                       
-                case 7: {
-                    vector<double> caar_group1, caar_group2, caar_group3;
-                    vector<double> caar_std_group1, caar_std_group2, caar_std_group3;
-                    CalculateAAR_CAAR_Std(BestEsti, market_returns, N, aar_group1, caar_group1, aar_std_group1, caar_std_group1);
-                    CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, aar_group2, caar_group2, aar_std_group2, caar_std_group2);
-                    CalculateAAR_CAAR_Std(MissEsti, market_returns, N, aar_group3, caar_group3, aar_std_group3, caar_std_group3);
-                    
-                    WritePlotData("caar_std_data.dat", caar_std_group1, caar_std_group2, caar_std_group3, N);
-                    GenerateGnuplotScript("caar_std_plot.gp", "caar_std_data.dat", "caar_std_plot.png",
-                          "CAAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(CAAR)");
-                    cout << "CAAR-STD graph generated using Gnuplot.\n";
-                    break;
-                    }
+            case 7: {
+                WritePlotData("caar_std_data.dat", caar_std_h, caar_std_m, caar_std_l, N);
+                GenerateGnuplotScript("caar_std_plot.gp", "caar_std_data.dat", "caar_std_plot.png",
+                        "CAAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(CAAR)");
+                cout << "CAAR-STD graph generated using Gnuplot.\n";
+                break;
+                }
 
             case 8:
                 // Exit the program
