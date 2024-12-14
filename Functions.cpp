@@ -231,61 +231,6 @@ void CalculateAAR_CAAR_Std(const StocksGroup& group, const Vector& market_return
 }
 
 
-void PlotMetricsWithGnuplot(const Matrix &metrics) {
-    FILE *gnuplotPipe, *tempDataFile;
-    const char *tempDataFileName = "metricsData";
-    const char *title = "Metrics Matrix (AAR, AAR-STD, CAAR, CAAR-STD)";
-    const char *xLabel = "Group";
-    const char *yLabel = "Values";
-
-    // Group names for x-axis labels
-    const char *groups[3] = {"BeatEsti", "MeetEsti", "MissEsti"};
-
-    gnuplotPipe = popen("gnuplot -persist", "w");
-    if (gnuplotPipe) {
-        // Write gnuplot configuration
-        fprintf(gnuplotPipe, "set grid\n");
-        fprintf(gnuplotPipe, "set title '%s'\n", title);
-        fprintf(gnuplotPipe, "set xlabel '%s'\n", xLabel);
-        fprintf(gnuplotPipe, "set ylabel '%s'\n", yLabel);
-        fprintf(gnuplotPipe, "set style data histograms\n");
-        fprintf(gnuplotPipe, "set style histogram cluster gap 1\n");
-        fprintf(gnuplotPipe, "set style fill solid\n");
-        fprintf(gnuplotPipe, "set boxwidth 0.9\n");
-        fprintf(gnuplotPipe, "set xtics rotate by -45\n");
-
-        // Write data to a temporary file
-        tempDataFile = fopen(tempDataFileName, "w");
-        if (!tempDataFile) {
-            cerr << "Error opening temporary data file.\n";
-            return;
-        }
-
-        // Write the matrix data to the temporary file
-        fprintf(tempDataFile, "Group AAR AAR_STD CAAR CAAR_STD\n");
-        for (int i = 0; i < 3; i++) {
-            fprintf(tempDataFile, "%s %lf %lf %lf %lf\n", groups[i], 
-                    metrics[i][0], metrics[i][1], metrics[i][2], metrics[i][3]);
-        }
-        fclose(tempDataFile);
-
-        // Configure gnuplot to plot the data
-        fprintf(gnuplotPipe, "plot for [col=2:5] '%s' using col:xtic(1) title columnheader(col) with histogram\n", tempDataFileName);
-        fflush(gnuplotPipe);
-
-        // Wait for user to close the plot
-        cout << "Press Enter to close the plot...";
-        getchar();
-
-        // Clean up
-        remove(tempDataFileName);
-        fprintf(gnuplotPipe, "exit\n");
-        pclose(gnuplotPipe);
-    } else {
-        cerr << "Gnuplot not found.\n";
-    }
-}
-
 
 void plotResultsFromMatrix3D(const vector<vector<vector<double>>>& Matrix3D, int col_num, int N, const char* title) {
     FILE *gnuplotPipe, *tempDataFile;
