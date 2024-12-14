@@ -54,7 +54,7 @@ void Stock::PrintHistoricalData()
 
 //改了一下
 void Stock::Clipping(int N) {
-    lock_guard<mutex> lock(stockMutex);
+    // lock_guard<mutex> lock(stockMutex);
 
     string line, sDate;
     double open, high, low, close, adjclose, volume;

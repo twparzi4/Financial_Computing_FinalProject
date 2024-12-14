@@ -7,6 +7,7 @@
 
 using Vector = std::vector<double>;
 using Matrix = std::vector<Vector>;
+using Matrix3D = std::vector<Matrix>;
 
 // Matrix and Vector Operations
 Vector operator*(const Matrix& C, const Vector& V);     // Matrix * Vector

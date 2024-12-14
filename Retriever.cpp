@@ -90,7 +90,7 @@ void Retriever::GetDataForStocksRange(StocksGroup::iterator start, StocksGroup::
 
             status = curl_easy_perform(handle);
             if (status == CURLE_OK) {
-                lock_guard<mutex> lock(stocksMutex);
+                // lock_guard<mutex> lock(stocksMutex);
                 it->second.PassData(data);
                 it->second.Clipping(N);
             } else {
@@ -118,7 +118,7 @@ int Retriever::GetData(StocksGroup &stocks, int N, Stock& iwv) {
 
     // Calculate the size of the workload each thread will handle
     // size_t chunkSize = stocks.size() / numThreads;
-    const size_t numThreads = 3; // changed from 4 to 3 and no issues for extarcting stock price.. so it's the api's problem
+    const size_t numThreads = 2; // changed from 4 to 3 and no issues for extarcting stock price.. so it's the api's problem
     size_t chunkSize = stocks.size() / numThreads;
 
     vector<thread> threads;

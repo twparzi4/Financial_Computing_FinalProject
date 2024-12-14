@@ -31,5 +31,7 @@ void GenerateGnuplotScript(const std::string& script_file, const std::string& da
                            const std::string& output_file, const std::string& title, 
                            const std::string& xlabel, const std::string& ylabel);
 
+void PlotMetricsWithGnuplot(const Matrix3D &metrics, int N);
+void plotResultsFromMatrix3D(const vector<vector<vector<double>>>& Matrix3D, int col_num, int N, const char* title);
 
 

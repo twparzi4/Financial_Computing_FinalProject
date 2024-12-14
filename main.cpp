@@ -12,7 +12,6 @@
 #include "Matrix.h"
 
 
-
 using namespace std;
 
 int main() {
@@ -20,7 +19,7 @@ int main() {
     StocksGroup TotalStock, BestEsti, MeetEsti, MissEsti;
     vector<double> surprises;
     Stock iwv("IWV", "2024-07-01", "2024-07-01", 0.0, 0.0, 0.0, 0.0); // IWV stock object
-    Matrix metrics(3, vector<double>(4, 0.0)); // 3 groups, 4 metrics: AAR, AAR-STD, CAAR, CAAR-STD
+    Matrix3D metrics; // 3 groups, 4 metrics: AAR, AAR-STD, CAAR, CAAR-STD
     vector<double> market_returns; // Placeholder for market returns
 
     int N = 50; // Default N value
@@ -33,7 +32,6 @@ int main() {
     Vector aar_std_h, aar_std_m, aar_std_l;
 
 
-
     while (true) {
         // Menu options
         cout << "\nMenu:\n"
@@ -44,6 +42,7 @@ int main() {
              << "5. Show gnuplot graph for AAR-STD\n"
              << "6. Show gnuplot graph for CAAR\n"
              << "7. Show gnuplot graph for CAAR-STD\n"
+            //  << "4. Show plot.\n"
              << "8. Exit\n"
              << "Enter your choice: ";
 
@@ -83,6 +82,13 @@ int main() {
                 CalculateAAR_CAAR_Std(BestEsti, market_returns, N, aar_h, caar_h, aar_std_h, caar_std_h);
                 CalculateAAR_CAAR_Std(MeetEsti, market_returns, N, aar_m, caar_m, aar_std_m, caar_std_m);
                 CalculateAAR_CAAR_Std(MissEsti, market_returns, N, aar_l, caar_l, aar_std_l, caar_std_l);
+
+                Matrix Row1, Row2, Row3;
+                Row1.push_back(aar_h); Row1.push_back(aar_std_h); Row1.push_back(caar_h); Row1.push_back(caar_std_h);
+                Row2.push_back(aar_m); Row2.push_back(aar_std_m); Row2.push_back(caar_m); Row2.push_back(caar_std_m);
+                Row3.push_back(aar_l); Row3.push_back(aar_std_l); Row3.push_back(caar_l); Row3.push_back(caar_std_l);
+
+                metrics.push_back(Row1); metrics.push_back(Row2); metrics.push_back(Row3);
                 
                 break;
             }
@@ -160,35 +166,40 @@ int main() {
 
 
             case 4:
-                WritePlotData("aar_data.dat", aar_h, aar_m, aar_l, N);
-                GenerateGnuplotScript("aar_plot.gp", "aar_data.dat", "aar_plot.png",
-                      "Average Abnormal Returns (AAR)", "Days Relative to Earnings Announcement", "AAR");
+                // WritePlotData("aar_data.dat", aar_h, aar_m, aar_l, N);
+                // GenerateGnuplotScript("aar_plot.gp", "aar_data.dat", "aar_plot.png",
+                //       "Average Abnormal Returns (AAR)", "Days Relative to Earnings Announcement", "AAR");
+                plotResultsFromMatrix3D(metrics, 0, N, "AAR");
 
                 break;
 
             case 5:
-                WritePlotData("aar_std_data.dat", aar_std_h, aar_std_m, aar_std_l, N);
-                GenerateGnuplotScript("aar_std_plot.gp", "aar_std_data.dat", "aar_std_plot.png",
-                      "AAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(AAR)");
+                // WritePlotData("aar_std_data.dat", aar_std_h, aar_std_m, aar_std_l, N);
+                // GenerateGnuplotScript("aar_std_plot.gp", "aar_std_data.dat", "aar_std_plot.png",
+                //       "AAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(AAR)");
+                plotResultsFromMatrix3D(metrics, 1, N, "AAR_std");
 
                 break;
 
             case 6: {
                 // ExportCAARToFile(caar_group1, caar_group2, caar_group3, "caar_data.dat", N);
-                WritePlotData("caar_data.dat", caar_h, caar_m, caar_l, N);
-                GenerateGnuplotScript("caar_plot.gp", "caar_data.dat", "caar_plot.png",
-                      "Cumulative Average Abnormal Returns (CAAR)", "Days Relative to Earnings Announcement", "CAAR");
-                cout << "CAAR graph generated using Gnuplot.\n";
+                // WritePlotData("caar_data.dat", caar_h, caar_m, caar_l, N);
+                // GenerateGnuplotScript("caar_plot.gp", "caar_data.dat", "caar_plot.png",
+                //       "Cumulative Average Abnormal Returns (CAAR)", "Days Relative to Earnings Announcement", "CAAR");
+                // cout << "CAAR graph generated using Gnuplot.\n";
+                plotResultsFromMatrix3D(metrics, 2, N, "CAAR");
                 break;
                 }
                       
             case 7: {
-                WritePlotData("caar_std_data.dat", caar_std_h, caar_std_m, caar_std_l, N);
-                GenerateGnuplotScript("caar_std_plot.gp", "caar_std_data.dat", "caar_std_plot.png",
-                        "CAAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(CAAR)");
-                cout << "CAAR-STD graph generated using Gnuplot.\n";
+                // WritePlotData("caar_std_data.dat", caar_std_h, caar_std_m, caar_std_l, N);
+                // GenerateGnuplotScript("caar_std_plot.gp", "caar_std_data.dat", "caar_std_plot.png",
+                //         "CAAR Standard Deviation", "Days Relative to Earnings Announcement", "STD(CAAR)");
+                // cout << "CAAR-STD graph generated using Gnuplot.\n";
+                plotResultsFromMatrix3D(metrics, 3, N, "CAAR_std");
                 break;
                 }
+
 
             case 8:
                 // Exit the program
